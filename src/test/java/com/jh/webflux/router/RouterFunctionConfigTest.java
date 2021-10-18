@@ -2,6 +2,8 @@ package com.jh.webflux.router;
 
 import com.jh.webflux.user.User;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -10,13 +12,19 @@ import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
 import org.springframework.web.server.WebExceptionHandler;
 import org.springframework.web.server.adapter.WebHttpHandlerBuilder;
 import reactor.core.publisher.Mono;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
 import javax.validation.Validator;
+import java.time.Duration;
+import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
@@ -25,7 +33,6 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.*
 
 class RouterFunctionConfigTest {
     User user;
-    Validator validator=createValidator();
 
 
     HandlerFunction handlerFunctionForGET= request -> {
@@ -57,13 +64,40 @@ class RouterFunctionConfigTest {
 
     HandlerFunction handlerFunctionForPOST= request -> {
 
-        return ServerResponse.ok().body(Mono.just("hello"),String.class);
+        return ServerResponse
+                .ok()
+                .body(request
+                        .bodyToFlux(User.class)
+                        .doOnNext(this::validate)
+                    ,User.class);
     };
 
 //    HandlerFunction handlerFunctionForPOST2= request -> {
 //        return ServerResponse.ok().body(Mono.just("hello"),String.class);
 //    };
 
+
+//    <T> void validate(T t){
+//        Set<ConstraintViolation<T>> validate = validator.validate(t, t.getClass());
+//
+//        if(!validate.isEmpty()){
+//            String errorMessage=validate.stream().map(tConstraintViolation -> tConstraintViolation.getMessage())
+//                    .collect(Collectors.joining("\n"));
+//            throw new ClientRuntimeException(errorMessage);
+//        }
+//    }
+
+    void validate(User t){
+
+        Validator validator=createValidator();
+        Set<ConstraintViolation<User>> validate = validator.validate(t, User.class);
+
+        if(!validate.isEmpty()){
+            String errorMessage=validate.stream().map(tConstraintViolation -> tConstraintViolation.getMessage())
+                    .collect(Collectors.joining("\n"));
+            throw new ClientRuntimeException(errorMessage);
+        }
+    }
 
     RouterFunction helloRouterFunction=nest(RequestPredicates.path("/users"),
     nest(accept(MediaType.APPLICATION_JSON)
@@ -158,13 +192,19 @@ class RouterFunctionConfigTest {
 //            })
             .handlerStrategies(HandlerStrategies.builder()
                     .exceptionHandler((exchange, ex) -> {
-                        if(ex instanceof RuntimeException){
+                        if(ex instanceof ClientRuntimeException){
+                            exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
+
+                            return exchange.getResponse().setComplete();
+                        }
+                        else if(ex instanceof RuntimeException){
                             exchange.getResponse().setStatusCode(HttpStatus.BAD_GATEWAY);
 
                             return exchange.getResponse().setComplete();
                         }
                         return Mono.error(ex);
                     }).build())
+            .configureClient().responseTimeout(Duration.ofHours(1))
             .build();
 
     @Test
@@ -229,10 +269,53 @@ class RouterFunctionConfigTest {
         * */
     }
 
+    @Test
+    void POST_정상(){
+        User user=new User("kim",50,"basketball");
+        webTestClient.post().uri("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(user)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$").isNotEmpty()
+                .jsonPath("$").isArray()
+                .jsonPath("$[0].name").isEqualTo(user.getName())
+                .jsonPath("$[0].age").isEqualTo(user.getAge())
+                .jsonPath("$[0].hobby").isEqualTo(user.getHobby())
+                .consumeWith(System.out::println);
+    }
+
+    @Test
+    void POST_에러_validation(){
+        User user=new User();
+        user.setAge(50);
+        user.setHobby("validationError");
+        webTestClient.post().uri("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(user)
+                .exchange()
+                .expectStatus().is4xxClientError()
+                .expectBody()
+//                .jsonPath("$").isNotEmpty()
+//                .jsonPath("$").isArray()
+//                .jsonPath("$[0].name").isEqualTo(user.getName())
+//                .jsonPath("$[0].age").isEqualTo(user.getAge())
+//                .jsonPath("$[0].hobby").isEqualTo(user.getHobby())
+                .consumeWith(System.out::println);
+    }
+
     private Validator createValidator() {
-        //return Validation.buildDefaultValidatorFactory().getValidator();
+//        return Validation.buildDefaultValidatorFactory().getValidator();
         LocalValidatorFactoryBean localValidatorFactoryBean = new LocalValidatorFactoryBean(); //spring에서 사용하도록 만든것..
+
         localValidatorFactoryBean.afterPropertiesSet(); //초기화하는거.. 반드시필요
         return localValidatorFactoryBean;
+    }
+
+    static class ClientRuntimeException extends RuntimeException{
+        public ClientRuntimeException(String message){
+            super(message);
+        }
     }
 }

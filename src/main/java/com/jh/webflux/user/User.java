@@ -1,10 +1,8 @@
 package com.jh.webflux.user;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
 import javax.validation.constraints.NotNull;
 
@@ -12,8 +10,10 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @EqualsAndHashCode
 @NoArgsConstructor
+@ToString
 public class User {
     @NotNull
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String name;
     private int age;
     private String hobby;
