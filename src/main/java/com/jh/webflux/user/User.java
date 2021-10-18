@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @ToString
 public class User {
-    @NotNull
+    @NotNull(message = "name must have value")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String name;
     private int age;

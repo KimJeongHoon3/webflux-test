@@ -4,6 +4,7 @@ import com.jh.webflux.user.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Errors;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
@@ -33,7 +36,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.*
 
 class RouterFunctionConfigTest {
     User user;
-
+    Validator validator=createValidator();
 
     HandlerFunction handlerFunctionForGET= request -> {
         String id=request.pathVariable("id");
@@ -63,7 +66,7 @@ class RouterFunctionConfigTest {
     };
 
     HandlerFunction handlerFunctionForPOST= request -> {
-
+        User user=new User();
         return ServerResponse
                 .ok()
                 .body(request
@@ -77,8 +80,20 @@ class RouterFunctionConfigTest {
 //    };
 
 
-//    <T> void validate(T t){
-//        Set<ConstraintViolation<T>> validate = validator.validate(t, t.getClass());
+    <T> void validate(T t){
+        Set<ConstraintViolation<T>> validate = validator.validate(t);
+
+        if(!validate.isEmpty()){
+            String errorMessage=validate.stream().map(tConstraintViolation -> tConstraintViolation.getMessage())
+                    .collect(Collectors.joining("\n"));
+            System.out.println("에러 메세지: "+errorMessage);
+            throw new ClientRuntimeException(errorMessage);
+        }
+    }
+
+//    void validate(User t){
+//
+//        Set<ConstraintViolation<User>> validate = validator.validate(t);
 //
 //        if(!validate.isEmpty()){
 //            String errorMessage=validate.stream().map(tConstraintViolation -> tConstraintViolation.getMessage())
@@ -86,18 +101,6 @@ class RouterFunctionConfigTest {
 //            throw new ClientRuntimeException(errorMessage);
 //        }
 //    }
-
-    void validate(User t){
-
-        Validator validator=createValidator();
-        Set<ConstraintViolation<User>> validate = validator.validate(t, User.class);
-
-        if(!validate.isEmpty()){
-            String errorMessage=validate.stream().map(tConstraintViolation -> tConstraintViolation.getMessage())
-                    .collect(Collectors.joining("\n"));
-            throw new ClientRuntimeException(errorMessage);
-        }
-    }
 
     RouterFunction helloRouterFunction=nest(RequestPredicates.path("/users"),
     nest(accept(MediaType.APPLICATION_JSON)
@@ -194,7 +197,6 @@ class RouterFunctionConfigTest {
                     .exceptionHandler((exchange, ex) -> {
                         if(ex instanceof ClientRuntimeException){
                             exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
-
                             return exchange.getResponse().setComplete();
                         }
                         else if(ex instanceof RuntimeException){
