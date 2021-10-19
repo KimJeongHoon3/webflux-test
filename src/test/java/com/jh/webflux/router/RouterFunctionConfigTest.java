@@ -3,6 +3,7 @@ package com.jh.webflux.router;
 import com.jh.webflux.user.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.reactive.error.DefaultErrorWebExceptionHandler;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
@@ -197,7 +199,9 @@ class RouterFunctionConfigTest {
                     .exceptionHandler((exchange, ex) -> {
                         if(ex instanceof ClientRuntimeException){
                             exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
-                            return exchange.getResponse().setComplete();
+                            exchange.getResponse().getHeaders().set(HttpHeaders.CONTENT_TYPE,MediaType.APPLICATION_JSON_VALUE);
+                            return exchange.getResponse().writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap((("{\"message\":\""+ex.getMessage()+"\"}").getBytes()))));
+//                            return exchange.getResponse().setComplete();
                         }
                         else if(ex instanceof RuntimeException){
                             exchange.getResponse().setStatusCode(HttpStatus.BAD_GATEWAY);
@@ -219,7 +223,10 @@ class RouterFunctionConfigTest {
         .jsonPath("$.name").isEqualTo(user.getName())
         .jsonPath("$.age").isEqualTo(user.getAge())
         .jsonPath("$.hobby").isEqualTo(user.getHobby())
-        .consumeWith(System.out::println);
+        .consumeWith(result -> {
+//            EntityExchangeResult
+            System.out.println(result);
+        });
 
 //        webTestClient.get().uri("/users/2").accept(MediaType.APPLICATION_JSON)
 //                .exchange()
