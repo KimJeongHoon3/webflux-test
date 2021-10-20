@@ -11,24 +11,30 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode
 @NoArgsConstructor
 @ToString
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
+    public User(@NotNull(message = "name must have value") String name, int age, String hobby) {
+        this.name = name;
+        this.age = age;
+        this.hobby = hobby;
+    }
+
     @NotNull(message = "name must have value")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String name;
     private int age;
     private String hobby;
 
-//    @NotNull
-//    private Level level;
-//    private int recommendCnt;
-//    private int loginCnt;
-//
-//    public void upgradeLevel() {
-//        Level nextLevel=level.nextLevel();
-//        if(nextLevel==null){
-//            throw new IllegalStateException("cannot upgrade next Level");
-//        }else{
-//            level=nextLevel;
-//        }
-//    }
+    @NotNull(message = "level must have value")
+    private Level level;
+    private int recommendCnt;
+    private int loginCnt;
+
+    public void upgradeLevel() {
+        Level nextLevel=level.nextLevel();
+        if(nextLevel==null){
+            throw new IllegalStateException("cannot upgrade next Level");
+        }else{
+            level=nextLevel;
+        }
+    }
 }

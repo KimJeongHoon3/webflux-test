@@ -1,7 +1,13 @@
 package com.jh.webflux.user;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum Level {
-    GOLD(3,null),SILVER(2,GOLD),BASIC(1,SILVER);
+    GOLD(3,null),
+    SILVER(2,GOLD),
+    BASIC(1,SILVER);
 
     private final int value;
     private final Level nextLevel;
@@ -11,6 +17,7 @@ public enum Level {
         this.nextLevel=nextLevel;
     }
 
+    @JsonValue
     public int intValue() {
         return value;
     }
@@ -26,5 +33,10 @@ public enum Level {
             case 3 : return GOLD;
             default : throw new UnsupportedOperationException("not defined type : "+value);
         }
+    }
+
+    @JsonCreator
+    public static Level fromJson(int value){
+        return Level.valueOf(value);
     }
 }
