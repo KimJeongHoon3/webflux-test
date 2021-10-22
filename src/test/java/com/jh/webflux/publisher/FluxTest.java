@@ -1,11 +1,14 @@
 package com.jh.webflux.publisher;
 
+import io.reactivex.Observable;
+import io.reactivex.Observer;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 import reactor.util.function.Tuple2;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 public class FluxTest {
     @Test
@@ -57,5 +60,23 @@ public class FluxTest {
                 .expectNext("Barbossa | Barbossa2")
                 .verifyComplete();
 
+    }
+
+    @Test
+    void delay() throws InterruptedException {
+        Observable
+                .timer(1, TimeUnit.SECONDS)
+                .flatMap(i -> Observable.just("1","2","3"))
+                .subscribe(System.out::println);
+
+        Thread.sleep(5000);
+    }
+
+    @Test
+    void delay2() throws InterruptedException {
+        Observable.just("Lorem","ipsum","dolor","sit","amet","acbcfsdfsd","qweqwe","elit")
+                .flatMap(s->Observable.timer(s.length(),TimeUnit.SECONDS).map(l -> s))
+                .subscribe(System.out::println);
+        Thread.sleep(15000);
     }
 }

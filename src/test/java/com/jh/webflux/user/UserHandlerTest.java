@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.JsonPathAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.blockhound.BlockHound;
 
 import java.time.Duration;
 
@@ -71,6 +72,7 @@ class UserHandlerTest {
 
     @Test
     void POST_정상(){
+//        BlockHound.install();
         User user=new User("kim",50,"hobby",Level.BASIC,1,1);
         webTestClient.post().uri("/users").contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(user)
