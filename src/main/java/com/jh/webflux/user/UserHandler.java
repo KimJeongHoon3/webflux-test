@@ -3,8 +3,11 @@ package com.jh.webflux.user;
 import com.jh.webflux.exception.CustomResponseException;
 import com.jh.webflux.validator.CustomValidator;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -14,6 +17,8 @@ import javax.xml.validation.Validator;
 @Component
 @Slf4j
 public class UserHandler {
+    RestTemplate restTemplate=new RestTemplate();
+
     public Mono<ServerResponse> getUser(ServerRequest serverRequest) {
         log.info("id : "+serverRequest.pathVariable("id"));
         User user=new User("kim",50,"hobby");
@@ -43,6 +48,12 @@ public class UserHandler {
         return ServerResponse.ok()
                 .body(serverRequest.bodyToMono(User.class)
                                 .doOnNext(CustomValidator::validate)
+                        .log()
+                        .map(u -> {
+                            //System.out.println(restTemplate.getForEntity("http://localhost:8080/webflux/rest",String.class).getBody()); //blockhound에서 에러남!
+                            return u;
+                        })
+
                     ,User.class);
     }
 

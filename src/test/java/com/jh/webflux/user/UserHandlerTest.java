@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -18,11 +19,13 @@ import org.springframework.test.web.reactive.server.JsonPathAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.blockhound.BlockHound;
 
+import java.io.FileInputStream;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 //@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+//@AutoConfigureWebTestClient
 @WebFluxTest(properties = "server.error.include-message=always")
 @Import({RouterFunctionConfig.class,UserHandler.class, CustomWebExceptionHandler.class, Config.class})
 class UserHandlerTest {
@@ -72,7 +75,7 @@ class UserHandlerTest {
 
     @Test
     void POST_정상(){
-//        BlockHound.install();
+        BlockHound.install();
         User user=new User("kim",50,"hobby",Level.BASIC,1,1);
         webTestClient.post().uri("/users").contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(user)

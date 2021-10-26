@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration debug="true" scan="true" scanPeriod="10 seconds">
+    <!-- :%-3relative -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>[%d{yyyy/MM/dd HH:mm:ss.SSS}] [%5p] [%3t] %logger{10} %M [%X{clientId}] => %m%n</Pattern>
+        </layout>
+    </appender>
+
+    <appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator>
+            <key>clientId</key>
+            <defaultValue>bgms-mt</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="ROLLING_ROOT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <!--                <file>./logs/${clientId}.log</file>-->
+                <encoder>
+                    <pattern>[%d{yyyy/MM/dd HH:mm:ss.SSS}] [%5p] [%3t] %logger{10} %M [%X{clientId}] => %m%n</pattern>
+                    <!--<pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}][%thread] %-5level %logger{35} %mdc - %msg%n</pattern>-->
+                </encoder>
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <fileNamePattern>./logs/${clientId}_%d{yyyy-MM-dd}.log</fileNamePattern>
+                    <!-- <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                         <fileNamePattern>./test/logs/${clientId}_%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern> -->
+
+                    <!--<timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">-->
+                    <!-- or whenever the file size reaches 100MB -->
+                    <!--<maxFileSize>50MB</maxFileSize>-->
+                    <!-- kb, mb, gb -->
+                    <!--</timeBasedFileNamingAndTriggeringPolicy>-->
+                    <!--<maxHistory>30</maxHistory>-->
+                </rollingPolicy>
+            </appender>
+        </sift>
+    </appender>
+
+    <!--log4jdbc-->
+    <logger name="com.jh.webflux" level="info"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="SIFT" />
+    </root>
+</configuration>

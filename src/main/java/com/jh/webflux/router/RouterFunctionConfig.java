@@ -22,7 +22,7 @@ public class RouterFunctionConfig {
     }
 
     @Bean
-    public RouterFunction userRouterFunction(@Autowired UserHandler user){
+    public RouterFunction userRouterFunction(UserHandler user){
         return nest(path("/users")
                 ,nest(accept(MediaType.APPLICATION_JSON)
                         ,route().GET("{id}",user::getUser)
