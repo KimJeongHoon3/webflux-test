@@ -30,6 +30,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
 
     implementation group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.2.21'
     implementation group: 'io.projectreactor.tools', name: 'blockhound', version: '1.0.4.RELEASE'
