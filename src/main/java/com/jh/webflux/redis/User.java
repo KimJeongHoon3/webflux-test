@@ -1,15 +1,13 @@
 package com.jh.webflux.redis;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@EqualsAndHashCode
 public class User {
-    Vendor vendor;
+    String vendorCode;
     String name;
 }
